@@ -3,6 +3,12 @@ import jwt from 'jsonwebtoken'
 import fs from "fs"
 import Cors from 'cors'
 import cookie from 'cookie'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcrypt'
+
+import OriginSite from '../../lib/allHeader'
+const prisma = new PrismaClient()
+
 
 import initMiddleware from '../../lib/init-middleware'
 
@@ -12,16 +18,16 @@ const cors = initMiddleware(
     origin: 'true',
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
-    exposedHeaders: "helloworld"
+    allowedHeaders:['Content-Type, Accept, Origin, Authorization']
   })
 )
 
 //import TokenPrivate from './../../SecureToken/jwtRS256.key'
 
-function validateEmail(email:string) {
+function validateEmail(email:any) {
     /*const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;*/
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-  
+    console.log(email)
     return re.test(String(email).toLowerCase());
 }
 
@@ -32,44 +38,88 @@ function validatePassword(password:string) {
 
 export default async function handler(req : NextApiRequest, res: NextApiResponse)
 {
+    
     await cors(req, res)
+    OriginSite(req,res)
+
+   // res.setHeader('Access-Control-Allow-Origin',"http://localhost:3000"),
+    
     if(req.method === "POST")
     {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin)
+        //res.setHeader('Access-Control-Allow-Origin',req.headers.origin)
+        res.setHeader('Access-Control-Allow-Credentials', "true"),
+        res.setHeader('Content-Type', "application/json")
+
         let data = JSON.parse(req.body)
+        
         const {email, password} = data
+        console.log(password)
         if(email !== undefined && password !== undefined)
         {
             if(validateEmail(email)){
-                if(true)
+
+                const findAccount= await prisma.user.findUnique(
+                    {
+                     where:
+                     { 
+                        email: email
+                     },
+                     select:{
+                        id: true,
+                        email:true,
+                        password:true,
+                        profile:true
+                     },
+                    }
+                  )
+
+                console.log(findAccount)
+                if(findAccount?.email !== undefined)
                 {
-                    let privateKey = fs.readFileSync('./SecureToken/jwtRS256.key', "utf8");
-                    const data = jwt.sign({ foo: 'bar' }, privateKey, { algorithm: 'RS256' });
-                    res.setHeader('Access-Control-Allow-Origin', "http://localhost:3000")
-                    res.setHeader('Access-Control-Allow-Credentials', "true")
-                    res.setHeader(
-                        "Set-Cookie",
-                        cookie.serialize("token", "ok", {
-                          httpOnly: true,
-                          sameSite:"none",
-                          path:"/",
-                          secure: true,
-                          maxAge: 60 * 60,
-                        })
-                      );
-                      console.log("ok")
-                    
-                    
-                    //res.setHeader('Set-Cookie', cookie.serialize("token", "ok"))
-                    res.status(200).json({token:data})
+                    bcrypt.compare(password, findAccount.password, function(err, result) {
+                        console.log(result)
+                        if(result !== false)
+                        {
+                            console.log('connected')
+                            const date = new Date('08/13/2021 01:54:00')
+                            /*let dateNows = new Date('10.08.2021 00:00:00').getTime()/1000
+                            let dateNow = new Date(dateNows*1000).toLocaleDateString('fr-FR')*/
+                            let privateKey = fs.readFileSync('./SecureToken/jwtRS256.key', "utf8");
+                            const data = jwt.sign({ foo: 'bar' }, privateKey, { algorithm: 'RS256' });
+                            res.setHeader(
+                                "Set-Cookie",
+                                cookie.serialize("token", data, {
+                                httpOnly: true,
+                                secure: true,
+                                maxAge: 60 * 60 * 24,
+                                sameSite:"none",
+                                path:"/",
+                                })
+                            );
+                            res.status(200).json({
+                                token:data,
+                                success: true
+                            })
+                        }
+                        else
+                        {
+
+                            console.log('password Invalid')
+                            res.status(400).json({'error': "password Invalid"})
+                        }
+
+                    })
                 }
                 else 
                 {
-                    res.status(205).json({error: "password invalid"})
+                    res.status(400).json({'error': "email not found"})
                 }
             }
             else 
             {
-                res.status(205).json({error: "email invalid"})
+                //console.log(email)
+                res.status(400).json({error: "format email invalid"})
             }
             
         }
@@ -84,7 +134,7 @@ export default async function handler(req : NextApiRequest, res: NextApiResponse
                         "IP" : result.ip
                     })
                 })
-            console.log(req)
+            //console.log(req)
         }
         
     }

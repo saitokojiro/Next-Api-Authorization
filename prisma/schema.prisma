@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Notify {
+  id     Int     @default(autoincrement()) @id
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  desc String?
+  read Boolean @default(false)
+  deleted Boolean @default(false)
+}
+
+model Gallery{
+  id     Int     @default(autoincrement()) @id
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  media String?
+}
+
+model Comment {
+  id     Int     @default(autoincrement()) @id
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [PostId], references: [id])
+  userId Int
+  PostId Int
+  desc String?
+  media String?
+  
+}
+
+model Post{
+  id     Int     @default(autoincrement()) @id
+  user User @relation(fields: [userId], references: [id])
+  userId Int
+  desc String?
+  media String?
+  ShareCount Int?
+  ShareUserID Int?
+  LikeCount Int?
+  LikeUserID Int?
+  comment Comment?
+}
+
+//model Friend{
+//  id     Int     @default(autoincrement()) @id
+//  friend User @relation(fields: [friendId], references: [id])
+//  friendId Int 
+//  deleted String @default("false")
+//}
+
+model Profile {
+  id     Int     @default(autoincrement()) @id
+  bio    String?
+  description    String?
+  relationShip   String?
+  user   User    @relation("UserHasProfile",fields: [userId], references: [id])
+  userId Int
+}
+
+model User {
+  id      Int      @default(autoincrement()) @id
+  email   String @unique
+  password String
+  firstName String
+  lastName String
+  gender String
+  birthday DateTime
+  country String
+  status String
+  Last_Connected DateTime @default(now())
+  profile Profile? @relation("UserHasProfile")
+
+  //friend Friend?
+  post Post?
+  comment Comment?
+  gallery Gallery?
+  notify Notify?
+
+}
