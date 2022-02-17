@@ -46,7 +46,7 @@ export default async function handler(req : NextApiRequest, res: NextApiResponse
     
     if(req.method === "GET")
     {
-        res.setHeader('Access-Control-Allow-Origin', req.headers.origin)
+        res.setHeader('Access-Control-Allow-Origin', String(req.headers.origin))
         //res.setHeader('Access-Control-Allow-Origin',"*")
         //res.setHeader('Access-Control-Allow-Origin',req.headers.origin)
         res.setHeader('Access-Control-Allow-Credentials', "true"),
