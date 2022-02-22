@@ -30,7 +30,7 @@ export default async function handler(
 ) {
   await cors(req, res)
     OriginSite(req,res)
-  const getCookie = req.headers.cookie!;
+  const getCookie = req.headers.cookie;
 
   if(getCookie !== undefined && cookie.parse(getCookie).token !== undefined)
   {
@@ -39,7 +39,7 @@ export default async function handler(
 
     jwt.verify(
         cookie.parse(getCookie).token,
-        publicKey,{ algorithm: "RS256" },
+        publicKey,{ algorithms: ['RS256'] },
         (err, payload) => {
           if (err) {
             res.status(200).json({ success: false })
