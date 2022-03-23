@@ -8,7 +8,7 @@ import fs from "fs"
 
 import Cors from "cors";
 import cookie from "cookie";
-const prisma = new PrismaClient();
+//const prisma = new PrismaClient();
 
 type Data = {
   data : string
@@ -37,11 +37,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
   //const date = new Date("08/18/1998 00:00:00");
 
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", String(req.headers.origin)!);
   //console.log(req.headers.origin);
   res.setHeader("Access-Control-Allow-Credentials", "true");
+  //res.status(200).json({ data:"data",success: true });
 
-  if (req.method === "POST") {
+  
+  if (req.method === "GET") {
     const getCookie = req.headers.cookie;
     let privateKey = fs.readFileSync("./SecureToken/jwtRS256.key", "utf8");
     const data = jwt.sign({ 

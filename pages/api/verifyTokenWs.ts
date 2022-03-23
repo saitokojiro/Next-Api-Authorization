@@ -43,7 +43,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     } else {
       console.log(payload);
       res.status(200).json({
-        username : payload?.username, 
+        //@ts-ignore
+        username : String(payload?.username)!, 
         success: true });
     }
   });
