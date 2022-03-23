@@ -39,7 +39,7 @@ export default async function handler(
 
   const date = new Date('08/18/1998 00:00:00')
 
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin)
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin!)
   console.log(req.headers.origin)
   res.setHeader('Access-Control-Allow-Credentials', "true")
 
